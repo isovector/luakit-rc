@@ -14,6 +14,31 @@ local strip, split = lousy.util.string.strip, lousy.util.string.split
 local scroll_step = globals.scroll_step or 20
 local zoom_step = globals.zoom_step or 0.1
 
+
+----------
+-- Not the right place for this but yolo swag
+function os.capture(cmd, raw)
+  local f = assert(io.popen(cmd, 'r'))
+  local s = assert(f:read('*a'))
+  f:close()
+  if raw then return s end
+  s = string.gsub(s, '^%s+', '')
+  s = string.gsub(s, '%s+$', '')
+  s = string.gsub(s, '[\n\r]+', ' ')
+  return s
+end
+
+function os.quote(s)
+  if string.find(s, '[^%w%+%-%=%@%_%/]') or s == '' then
+    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
+  else
+    return s
+  end
+end
+----------
+
+
+
 -- Add binds to a mode
 function add_binds(mode, binds, before)
     assert(binds and type(binds) == "table", "invalid binds table type: " .. type(binds))
@@ -72,9 +97,6 @@ add_binds("all", {
                 local uri = w.view.hovered_uri
                 if uri then
                     w:new_tab(uri, false)
-                else -- Open selection in current tab
-                    uri = luakit.selection.primary
-                    if uri then w:navigate(w:search_open(uri)) end
                 end
             end
         end),
@@ -283,11 +305,24 @@ add_binds("normal", {
         end, {count = 1}),
 
     -- Yanking
-    key({}, "y", "Yank current URI to primary selection.",
+    buf("^yy$", "Yank current URI to primary selection.",
         function (w)
             local uri = string.gsub(w.view.uri or "", " ", "%%20")
-            luakit.selection.primary = uri
+            luakit.selection.clipboard = uri
             w:notify("Yanked uri: " .. uri)
+        end),
+
+    buf("^yc$", "Yank current selection to clipper.",
+        function (w)
+	        local text = luakit.selection.primary
+    	    if not text then w:error("Empty selection.") return end
+
+            local cmd =
+                ("echo $text | clipper --insert " .. w.view.uri):gsub('$text', os.quote(text))
+            local result = os.capture(cmd)
+
+    	    w:notify("Yanked quote to clipper: " .. result)
+    	    luakit.selection.primary = ""
         end),
 
     -- Commands
@@ -439,7 +474,7 @@ add_binds("insert", {
 readline_bindings = {
     key({"Shift"}, "Insert",
         "Insert contents of primary selection at cursor position.",
-        function (w) w:insert_cmd(luakit.selection.primary) end),
+        function (w) w:insert_cmd(luakit.selection.clipboard) end),
 
     key({"Control"}, "w", "Delete previous word.",
         function (w) w:del_word() end),

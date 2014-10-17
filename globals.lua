@@ -1,6 +1,6 @@
 -- Global variables for luakit
 globals = {
-    homepage            = "http://luakit.org/",
+    homepage            = "http://goodreads.com/",
  -- homepage            = "http://github.com/mason-larobina/luakit",
     scroll_step         = 40,
     zoom_step           = 0.1,
@@ -27,6 +27,8 @@ local lkv = string.match(luakit.version, "^(%d+.%d+.%d+)")
 globals.useragent = string.format("Mozilla/5.0 (%s) AppleWebKit/%s+ (KHTML, like Gecko) WebKitGTK+/%s luakit%s",
     string.sub(arch, 1, -2), luakit.webkit_user_agent_version,
     luakit.webkit_version, (lkv and ("/" .. lkv)) or "")
+
+globals.useragent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
 
 -- Search common locations for a ca file which is used for ssl connection validation.
 local ca_files = {
@@ -56,19 +58,15 @@ soup.accept_policy = cookie_policy.always
 -- it to avoid collisions with lua's string.format characters.
 -- See: http://www.lua.org/manual/5.1/manual.html#pdf-string.format
 search_engines = {
-    luakit      = "http://luakit.org/search/index/luakit?q=%s",
-    duckduckgo  = "http://duckduckgo.com/?q=%s&t=debian",
-    github      = "https://github.com/search?q=%s",
-    google      = "http://google.com/search?q=%s",
+    ddg  = "http://duckduckgo.com/?q=%s&t=debian",
+    gh      = "https://github.com/search?q=%s",
+    g      = "http://google.com/search?q=%s",
     imdb        = "http://www.imdb.com/find?s=all&q=%s",
-    wikipedia   = "http://en.wikipedia.org/wiki/Special:Search?search=%s",
-    debbugs     = "http://bugs.debian.org/%s",
-    sourceforge = "http://sf.net/search/?words=%s",
-    netflix     = "http://dvd.netflix.com/Search?v1=%s",
+    w   = "http://en.wikipedia.org/wiki/Special:Search?search=%s",
 }
 
 -- Set google as fallback search engine
-search_engines.default = search_engines.duckduckgo
+search_engines.default = search_engines.g
 -- Use this instead to disable auto-searching
 --search_engines.default = "%s"
 
